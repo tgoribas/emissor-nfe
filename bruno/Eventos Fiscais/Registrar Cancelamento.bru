@@ -1,0 +1,29 @@
+meta {
+  name: Registrar Cancelamento
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/eventos-fiscais
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "notaFiscalId": "{{notaFiscalId}}",
+    "tipoEvento": "110111",
+    "descricao": "Cancelamento por erro na digitacao dos itens da nota fiscal"
+  }
+}
+
+tests {
+  test("deve registrar ou recusar conforme status da nota (201/400/422)", function () {
+    expect([201, 400, 422]).to.include(res.getStatus());
+  });
+}

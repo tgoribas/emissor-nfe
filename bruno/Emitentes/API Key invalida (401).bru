@@ -1,0 +1,21 @@
+meta {
+  name: API Key invalida (401)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/emitentes
+  body: none
+  auth: none
+}
+
+headers {
+  x-api-key: nfe_chaveinvalida0000000000000000000000000000000000
+}
+
+tests {
+  test("deve recusar api key invalida (401)", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

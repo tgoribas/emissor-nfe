@@ -1,0 +1,53 @@
+meta {
+  name: Criar Tenant
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/tenants
+  body: json
+  auth: none
+}
+
+headers {
+  x-admin-key: {{adminKey}}
+}
+
+body:json {
+  {
+    "nome": "Poltuec do Brasil LTDA – EPP",
+    "email": "polutec@polutec.com.br",
+    "webhookUrl": "http://localhost:3001/api/webhooks/nfe"
+  }
+}
+
+script:pre-request {
+  bru.setVar("timestamp", Date.now());
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    if (res.getBody().id) {
+      bru.setEnvVar("tenantId", res.getBody().id);
+    }
+    if (res.getBody().apiKey) {
+      bru.setEnvVar("apiKey", res.getBody().apiKey);
+    }
+  }
+}
+
+tests {
+  test("deve criar o tenant (201)", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("deve retornar um id (uuid)", function () {
+    expect(res.getBody().id).to.be.a("string");
+    expect(res.getBody().id).to.match(/^[0-9a-f-]{36}$/);
+  });
+  
+  test("deve retornar a apiKey em claro (unica exibicao)", function () {
+    expect(res.getBody().apiKey).to.match(/^nfe_[0-9a-f]{48}$/);
+  });
+}

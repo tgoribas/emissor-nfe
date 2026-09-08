@@ -1,0 +1,20 @@
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Coleção da API do Gateway Multi-tenant de Emissão de NF-e.
+
+  Autenticação:
+  - Endpoints administrativos (/tenants): header x-admin-key com o valor de ADMIN_API_KEY (.env)
+  - Demais endpoints: header x-api-key com a chave do tenant (retornada UMA vez na criação)
+
+  Fluxo recomendado (a coleção já encadeia as variáveis automaticamente):
+  1. Health Check
+  2. Tenants > Criar Tenant        -> salva {{tenantId}} e {{apiKey}}
+  3. Emitentes > Criar Emitente    -> salva {{emitenteId}}
+  4. Certificados > Upload         -> requer PFX real em {{certificadoBase64}}
+  5. Series > Criar Serie
+  6. NFe > Emitir NFe              -> salva {{notaFiscalId}} e {{chaveAcesso}}
+  7. Eventos Fiscais / Webhooks / SEFAZ
+}

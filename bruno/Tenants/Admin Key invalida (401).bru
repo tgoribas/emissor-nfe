@@ -1,0 +1,21 @@
+meta {
+  name: Admin Key invalida (401)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/tenants
+  body: none
+  auth: none
+}
+
+headers {
+  x-admin-key: chave-completamente-errada
+}
+
+tests {
+  test("deve recusar admin key invalida (401)", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

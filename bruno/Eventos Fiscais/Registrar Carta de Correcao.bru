@@ -1,0 +1,36 @@
+meta {
+  name: Registrar Carta de Correcao
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/eventos-fiscais
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "notaFiscalId": "{{notaFiscalId}}",
+    "tipoEvento": "110110",
+    "descricao": "Correcao do endereco de entrega do destinatario da nota",
+    "sequenciaEvento": 1
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201 && res.getBody().id) {
+    bru.setEnvVar("eventoId", res.getBody().id);
+  }
+}
+
+tests {
+  test("deve registrar o evento (201)", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

@@ -1,0 +1,26 @@
+meta {
+  name: Status do Servico SEFAZ
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/sefaz/status/{{emitenteId}}
+  body: none
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+docs {
+  Consulta o status do webservice da SEFAZ para a UF do emitente.
+  Requer certificado digital valido cadastrado para o emitente.
+}
+
+tests {
+  test("deve responder sem erro de autenticacao (nao 401)", function () {
+    expect(res.getStatus()).to.not.equal(401);
+  });
+}

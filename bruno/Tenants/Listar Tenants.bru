@@ -1,0 +1,36 @@
+meta {
+  name: Listar Tenants
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/tenants
+  body: none
+  auth: none
+}
+
+headers {
+  x-admin-key: {{adminKey}}
+}
+
+tests {
+  test("deve retornar status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("deve retornar uma lista", function () {
+    expect(res.getBody()).to.be.an("array");
+  });
+
+  test("lista deve conter o tenant criado", function () {
+    const ids = res.getBody().map(function (t) { return t.id; });
+    expect(ids).to.include(bru.getEnvVar("tenantId"));
+  });
+
+  test("nao deve expor a apiKey (nem o hash)", function () {
+    res.getBody().forEach(function (t) {
+      expect(t.apiKey).to.equal(undefined);
+    });
+  });
+}

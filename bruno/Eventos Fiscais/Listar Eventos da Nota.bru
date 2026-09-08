@@ -1,0 +1,25 @@
+meta {
+  name: Listar Eventos da Nota
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/eventos-fiscais/nota/{{notaFiscalId}}
+  body: none
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+tests {
+  test("deve retornar status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("deve retornar uma lista", function () {
+    expect(res.getBody()).to.be.an("array");
+  });
+}

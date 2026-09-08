@@ -1,0 +1,17 @@
+meta {
+  name: Listar sem API Key (401)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/emitentes
+  body: none
+  auth: none
+}
+
+tests {
+  test("deve recusar requisicao sem x-api-key (401)", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

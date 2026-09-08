@@ -1,0 +1,94 @@
+meta {
+  name: Emitir NFe
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/nfe/emitir
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "emitenteId": "{{emitenteId}}",
+    "referenciaExterna": "PEDIDO-BRUNO-001",
+    "serie": 1,
+    "tipoEmissao": "1",
+    "naturezaOperacao": "VENDA DE MERCADORIA",
+    "destinatario": {
+      "cpfCnpj": "12345678909",
+      "nome": "Cliente Teste Bruno",
+      "logradouro": "Avenida Paulista",
+      "numero": "1000",
+      "bairro": "Bela Vista",
+      "codigoMunicipioIbge": "3550308",
+      "uf": "SP",
+      "cep": "01310100"
+    },
+    "itens": [
+      {
+        "numeroItem": 1,
+        "codigo": "PROD-001",
+        "descricao": "Produto de Teste",
+        "ncm": "84713012",
+        "cfop": "5102",
+        "unidadeComercial": "UN",
+        "quantidadeComercial": 2,
+        "valorUnitario": 50,
+        "valorTotalBruto": 100,
+        "impostos": {
+          "icms": {
+            "origem": "0",
+            "cst": "102"
+          },
+          "pis": {
+            "cst": "07"
+          },
+          "cofins": {
+            "cst": "07"
+          }
+        }
+      }
+    ],
+    "pagamento": {
+      "formaPagamento": "01",
+      "valor": 100
+    },
+    "informacoesComplementares": "NF-e emitida em ambiente de homologacao via colecao Bruno"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.id) {
+    bru.setEnvVar("notaFiscalId", body.id);
+  }
+  if (body && body.chaveAcesso) {
+    bru.setEnvVar("chaveAcesso", body.chaveAcesso);
+  }
+}
+
+docs {
+  A transmissao real para a SEFAZ exige certificado digital valido
+  cadastrado para o emitente (ver pasta Certificados).
+}
+
+tests {
+  test("deve criar a nota (201)", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("deve retornar chave de acesso com 44 digitos", function () {
+    expect(res.getBody().chaveAcesso).to.match(/^\d{44}$/);
+  });
+
+  test("deve retornar um status de NFe", function () {
+    expect(res.getBody().status).to.be.a("string");
+  });
+}

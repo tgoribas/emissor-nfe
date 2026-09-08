@@ -1,0 +1,25 @@
+meta {
+  name: Listar Emitentes
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/emitentes
+  body: none
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+tests {
+  test("deve retornar status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("deve retornar uma lista", function () {
+    expect(res.getBody()).to.be.an("array");
+  });
+}

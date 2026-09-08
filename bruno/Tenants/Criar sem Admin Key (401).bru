@@ -1,0 +1,24 @@
+meta {
+  name: Criar sem Admin Key (401)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/tenants
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nome": "Invasor",
+    "email": "invasor@example.com"
+  }
+}
+
+tests {
+  test("deve recusar criacao sem x-admin-key (401)", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

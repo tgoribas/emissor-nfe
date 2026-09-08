@@ -1,0 +1,40 @@
+meta {
+  name: Criar Serie
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/series-numeracao
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "emitenteId": "{{emitenteId}}",
+    "serie": 1,
+    "tipoDocumento": "55",
+    "ultimoNumero": 0
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201 && res.getBody().id) {
+    bru.setEnvVar("serieId", res.getBody().id);
+  }
+}
+
+tests {
+  test("deve criar a serie (201)", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("deve vincular ao emitente correto", function () {
+    expect(res.getBody().emitenteId).to.equal(bru.getEnvVar("emitenteId"));
+  });
+}

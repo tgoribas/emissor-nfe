@@ -1,0 +1,52 @@
+meta {
+  name: Criar Emitente
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/emitentes
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "cnpj": "12345678000195",
+    "razaoSocial": "Empresa Teste Bruno LTDA",
+    "nomeFantasia": "Teste Bruno",
+    "inscricaoEstadual": "1234567890",
+    "regimeTributario": "1",
+    "ambienteSefaz": "2",
+    "uf": "SP",
+    "codigoMunicipioIbge": "3550308",
+    "logradouro": "Rua de Teste",
+    "numero": "100",
+    "bairro": "Centro",
+    "cep": "01001000"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201 && res.getBody().id) {
+    bru.setEnvVar("emitenteId", res.getBody().id);
+  }
+}
+
+tests {
+  test("deve criar o emitente (201)", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("deve retornar um id (uuid)", function () {
+    expect(res.getBody().id).to.match(/^[0-9a-f-]{36}$/);
+  });
+
+  test("deve vincular ao tenant correto", function () {
+    expect(res.getBody().tenantId).to.equal(bru.getEnvVar("tenantId"));
+  });
+}

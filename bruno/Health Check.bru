@@ -1,0 +1,26 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("deve retornar status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("servico deve estar online", function () {
+    expect(res.getBody().status).to.equal("online");
+  });
+
+  test("deve expor o mapa de endpoints", function () {
+    expect(res.getBody().endpoints).to.be.an("object");
+    expect(res.getBody().endpoints.nfe).to.equal("/api/v1/nfe");
+  });
+}

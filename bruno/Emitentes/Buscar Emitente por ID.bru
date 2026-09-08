@@ -1,0 +1,25 @@
+meta {
+  name: Buscar Emitente por ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/emitentes/{{emitenteId}}
+  body: none
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+tests {
+  test("deve retornar status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("deve retornar o emitente correto", function () {
+    expect(res.getBody().id).to.equal(bru.getEnvVar("emitenteId"));
+  });
+}

@@ -1,0 +1,41 @@
+meta {
+  name: Upload Certificado
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/certificados/upload
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "emitenteId": "{{emitenteId}}",
+    "arquivoPfxBase64": "{{certificadoBase64}}",
+    "senha": "{{certificadoSenha}}"
+  }
+}
+
+docs {
+  Requer um certificado digital A1 real (.pfx/.p12) convertido para Base64.
+  Gere com: base64 -i certificado.pfx | tr -d '\n'
+  e cole o resultado na variavel de ambiente {{certificadoBase64}}.
+}
+
+tests {
+  test("nao deve retornar erro interno (5xx)", function () {
+    expect(res.getStatus()).to.be.below(500);
+  });
+
+  test("com certificado valido deve retornar 201", function () {
+    if (bru.getEnvVar("certificadoBase64") !== "COLOQUE_AQUI_O_PFX_EM_BASE64") {
+      expect(res.getStatus()).to.equal(201);
+    }
+  });
+}

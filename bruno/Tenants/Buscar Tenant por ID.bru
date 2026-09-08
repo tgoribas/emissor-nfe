@@ -1,0 +1,25 @@
+meta {
+  name: Buscar Tenant por ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/tenants/{{tenantId}}
+  body: none
+  auth: none
+}
+
+headers {
+  x-admin-key: {{adminKey}}
+}
+
+tests {
+  test("deve retornar status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("deve retornar o tenant correto", function () {
+    expect(res.getBody().id).to.equal(bru.getEnvVar("tenantId"));
+  });
+}
