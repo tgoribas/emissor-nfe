@@ -83,9 +83,8 @@ A API adota um esquema de autenticação em duas camadas via headers HTTP:
 
 ## 📦 Pré-requisitos
 
-- [Node.js](https://nodejs.org/) (versão 20 ou superior)
-- [npm](https://www.npmjs.com/) ou [pnpm](https://pnpm.io/)
-- [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/) (para o banco de dados PostgreSQL)
+- [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/) (sobe o PostgreSQL e a API — suficiente para produção/VPS)
+- [Node.js](https://nodejs.org/) (versão 20 ou superior) e [npm](https://www.npmjs.com/) — necessários apenas para desenvolvimento local com hot-reload
 - Certificado Digital A1 no formato `.pfx` ou `.p12` (para emissão e testes junto à SEFAZ)
 
 ---
@@ -113,21 +112,28 @@ Copie o arquivo de exemplo e ajuste os parâmetros conforme necessário:
 cp .env.example .env
 ```
 
-### 4. Iniciar o Banco de Dados com Docker
+### 4. Executar
 
-Suba o container do PostgreSQL:
+#### Opção A — Tudo via Docker (produção / VPS)
+
+Sobe o PostgreSQL e a API juntos. A API só inicia após o banco passar no healthcheck e ambos reiniciam automaticamente após reboot ou crash (`restart: unless-stopped`):
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
-### 5. Iniciar a Aplicação em Modo Desenvolvimento
+#### Opção B — Modo Desenvolvimento (hot-reload)
+
+Suba apenas o container do PostgreSQL e rode a API localmente com watch:
 
 ```bash
+docker compose up -d postgres
 npm run start:dev
 ```
 
-A API estará acessível em: `http://localhost:3000/api/v1`
+Em ambos os casos, a API estará acessível em: `http://localhost:3000/api/v1`
+
+> **Nota:** ao rodar tudo via Docker, as variáveis `DB_HOST` e `DB_PORT` do `.env` são sobrescritas no `docker-compose.yml` para `postgres:5432` (rede interna do Docker). Os valores `localhost:5434` do `.env` valem apenas para a API rodando fora do container.
 
 ---
 
@@ -138,8 +144,9 @@ A API estará acessível em: `http://localhost:3000/api/v1`
 | `PORT` | Porta onde a aplicação NestJS irá rodar | `3000` |
 | `NODE_ENV` | Ambiente de execução (`development`, `production`) | `development` |
 | `ADMIN_API_KEY` | Chave mestra para gestão administrativa de tenants | `admin-super-secret-key` |
-| `DB_HOST` | Host do banco PostgreSQL | `localhost` |
-| `DB_PORT` | Porta exposta do PostgreSQL | `5434` (mapeada no Docker para 5432) |
+| `DB_HOST` | Host do banco PostgreSQL (ignorada pela API quando rodando via Docker) | `localhost` |
+| `DB_PORT` | Porta exposta do PostgreSQL no host (ignorada pela API quando rodando via Docker) | `5434` (mapeada no Docker para 5432) |
+| `API_PORT` | Porta do host mapeada para a API quando rodando via Docker | `3000` |
 | `DB_USER` | Usuário do banco de dados | `postgres` |
 | `DB_PASS` | Senha do banco de dados | `postgres123` |
 | `DB_NAME` | Nome da base de dados | `emissor_nfe_db` |
@@ -276,7 +283,9 @@ Para mais detalhes sobre conversão de certificados para Base64 e variáveis, co
 ```text
 emissor-nfe/
 ├── bruno/                      # Coleção de testes de API do Bruno
-├── docker-compose.yml          # Definição do container PostgreSQL
+├── docker-compose.yml          # Orquestração dos containers (PostgreSQL + API)
+├── Dockerfile                  # Build multi-stage da imagem da API (NestJS)
+├── .dockerignore               # Arquivos excluídos do contexto de build da imagem
 ├── package.json                # Dependências e scripts do projeto
 ├── src/
 │   ├── app.controller.ts       # Healthcheck e endpoints raiz

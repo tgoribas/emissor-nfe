@@ -3,6 +3,18 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+// Em produção, synchronize (risco de perda de dados) e logging (SQL com dados
+// pessoais — CPF, endereços, certificados — indo para stdout, vedado pela LGPD)
+// ficam desligados independentemente do .env.
+const isProduction = process.env.NODE_ENV === 'production';
+
+// TLS na conexão com o Postgres (DB_SSL=true); DB_SSL_REJECT_UNAUTHORIZED=false
+// aceita certificados autoassinados (comum em bancos gerenciados)
+export const databaseSsl =
+  process.env.DB_SSL === 'true'
+    ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' }
+    : undefined;
+
 export const databaseConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
@@ -12,7 +24,8 @@ export const databaseConfig: TypeOrmModuleOptions = {
   database: process.env.DB_NAME || 'emissor_nfe_db',
   entities: [__dirname + '/../modules/**/entity/*.entity{.ts,.js}'],
   migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
-  synchronize: process.env.DB_SYNCHRONIZE === 'true',
-  logging: process.env.DB_LOGGING === 'true',
+  synchronize: !isProduction && process.env.DB_SYNCHRONIZE === 'true',
+  logging: !isProduction && process.env.DB_LOGGING === 'true',
+  ssl: databaseSsl,
   autoLoadEntities: true,
 };

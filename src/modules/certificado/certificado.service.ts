@@ -7,32 +7,65 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class CertificadoService {
-  private readonly algorithm = 'aes-256-cbc';
-  private readonly secretKey = crypto
-    .createHash('sha256')
-    .update(process.env.ENCRYPTION_KEY || 'defaultsecretkeyemissornfe123456')
-    .digest();
+  private readonly secretKey: Buffer;
 
   constructor(
     @InjectRepository(CertificadoEntity)
     private readonly certificadoRepository: Repository<CertificadoEntity>,
-  ) {}
+  ) {
+    const encryptionKey = process.env.ENCRYPTION_KEY;
+    if (!encryptionKey || encryptionKey.length < 32) {
+      throw new Error(
+        'ENCRYPTION_KEY ausente ou com menos de 32 caracteres. ' +
+          'Defina uma chave forte no ambiente — a aplicação não sobe sem ela.',
+      );
+    }
+    this.secretKey = crypto.createHash('sha256').update(encryptionKey).digest();
+  }
 
+  // Formato: iv:authTag:ciphertext (hex)
   private encrypt(text: string): string {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(this.algorithm, this.secretKey, iv);
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', this.secretKey, iv);
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    return `${iv.toString('hex')}:${encrypted}`;
+    const authTag = cipher.getAuthTag();
+    return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
   }
 
   private decrypt(hash: string): string {
-    const [ivHex, encryptedText] = hash.split(':');
-    const iv = Buffer.from(ivHex, 'hex');
-    const decipher = crypto.createDecipheriv(this.algorithm, this.secretKey, iv);
+    const parts = hash.split(':');
+
+    // Formato legado (aes-256-cbc, sem autenticação): iv:ciphertext
+    if (parts.length === 2) {
+      const [ivHex, encryptedText] = parts;
+      const decipher = crypto.createDecipheriv(
+        'aes-256-cbc',
+        this.secretKey,
+        Buffer.from(ivHex, 'hex'),
+      );
+      let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      return decrypted;
+    }
+
+    const [ivHex, authTagHex, encryptedText] = parts;
+    const decipher = crypto.createDecipheriv(
+      'aes-256-gcm',
+      this.secretKey,
+      Buffer.from(ivHex, 'hex'),
+    );
+    decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
+  }
+
+  // Registros anteriores à criptografia do PFX guardam o base64 puro,
+  // que nunca contém ':' — a presença do separador identifica o formato cifrado.
+  private decryptPfx(stored: string): Buffer {
+    const base64 = stored.includes(':') ? this.decrypt(stored) : stored;
+    return Buffer.from(base64, 'base64');
   }
 
   async upload(dto: UploadCertificadoDto): Promise<Omit<CertificadoEntity, 'senhaCriptografada' | 'arquivoPfxBase64'>> {
@@ -74,9 +107,10 @@ export class CertificadoService {
     });
 
     const senhaCriptografada = this.encrypt(dto.senha);
+    const arquivoPfxCriptografado = this.encrypt(dto.arquivoPfxBase64);
 
     if (certificado) {
-      certificado.arquivoPfxBase64 = dto.arquivoPfxBase64;
+      certificado.arquivoPfxBase64 = arquivoPfxCriptografado;
       certificado.senhaCriptografada = senhaCriptografada;
       certificado.validadeInicio = validadeInicio;
       certificado.validadeFim = validadeFim;
@@ -85,7 +119,7 @@ export class CertificadoService {
     } else {
       certificado = this.certificadoRepository.create({
         emitenteId: dto.emitenteId,
-        arquivoPfxBase64: dto.arquivoPfxBase64,
+        arquivoPfxBase64: arquivoPfxCriptografado,
         senhaCriptografada,
         validadeInicio,
         validadeFim,
@@ -109,7 +143,7 @@ export class CertificadoService {
     }
 
     return {
-      pfxBuffer: Buffer.from(cert.arquivoPfxBase64, 'base64'),
+      pfxBuffer: this.decryptPfx(cert.arquivoPfxBase64),
       senha: this.decrypt(cert.senhaCriptografada),
     };
   }
@@ -124,7 +158,7 @@ export class CertificadoService {
     }
 
     const senha = this.decrypt(cert.senhaCriptografada);
-    const pfxBuffer = Buffer.from(cert.arquivoPfxBase64, 'base64');
+    const pfxBuffer = this.decryptPfx(cert.arquivoPfxBase64);
     const forge = require('node-forge');
 
     try {

@@ -9,7 +9,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASS:-postgres123}
       TZ: America/Sao_Paulo
     ports:
-      - "${DB_PORT:-5434}:5432"
+      # Restrito ao host — o banco não deve ficar acessível pela rede local
+      - "127.0.0.1:${DB_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -17,6 +18,25 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  api:
+    build: .
+    container_name: emissor_nfe_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Dentro da rede do Docker a API acessa o Postgres pelo nome do serviço,
+      # na porta interna 5432 (o 5434 do .env é só o mapeamento para o host)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      PORT: 3000
+      TZ: America/Sao_Paulo
+    ports:
+      - "${API_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:

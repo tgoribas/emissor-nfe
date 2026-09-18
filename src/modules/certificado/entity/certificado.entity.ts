@@ -34,7 +34,7 @@ export class CertificadoEntity {
   @Column({ type: 'text', name: 'arquivo_pfx_base64' })
   arquivoPfxBase64: string;
 
-  @Column({ type: 'varchar', length: 255, name: 'senha_criptografada' })
+  @Column({ type: 'text', name: 'senha_criptografada' })
   senhaCriptografada: string;
 
   @Column({ type: 'timestamp', name: 'validade_inicio', nullable: true })

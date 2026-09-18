@@ -1,0 +1,39 @@
+meta {
+  name: Anonimizar Titular
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/lgpd/titular/anonimizar
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "cpfCnpj": "11144477735"
+  }
+}
+
+docs {
+  Art. 18, IV da LGPD — anonimização das cópias sem obrigação legal de guarda.
+  Mascara os dados pessoais do titular em payload_original das notas e nos
+  payloads de webhook_logs DESTE tenant. IRREVERSÍVEL.
+  XMLs fiscais e chave de acesso são mantidos (Art. 16, I — guarda fiscal).
+}
+
+tests {
+  test("deve retornar status 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("deve informar o que foi mantido por obrigação legal", function () {
+    expect(res.getBody()).to.have.property("mantidoPorObrigacaoLegal");
+  });
+}

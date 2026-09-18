@@ -1,0 +1,41 @@
+meta {
+  name: Relatorio do Titular
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/lgpd/titular?cpfCnpj=11144477735
+  body: none
+  auth: none
+}
+
+params:query {
+  cpfCnpj: 11144477735
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+docs {
+  Art. 18, I, II e V da LGPD — confirmação, acesso e portabilidade.
+  Retorna onde o CPF/CNPJ do titular aparece nos dados DESTE tenant
+  (notas fiscais e logs de webhook), com a classificação de retenção:
+  XMLs fiscais são retidos por obrigação legal (Art. 16, I);
+  cópias operacionais são elegíveis a anonimização.
+
+  A seção acessosAosSeusDados (Art. 37) lista os acessos registrados
+  aos dados do titular na trilha de auditoria: consultas LGPD sobre o
+  documento e acessos às notas em que ele figura (até 100 mais recentes).
+}
+
+tests {
+  test("deve retornar status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("deve classificar a retenção", function () {
+    expect(res.getBody()).to.have.property("compartilhamentos");
+  });
+}
