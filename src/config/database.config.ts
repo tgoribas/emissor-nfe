@@ -25,6 +25,9 @@ export const databaseConfig: TypeOrmModuleOptions = {
   entities: [__dirname + '/../modules/**/entity/*.entity{.ts,.js}'],
   migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
   synchronize: !isProduction && process.env.DB_SYNCHRONIZE === 'true',
+  // DB_MIGRATIONS_RUN=true aplica as migrations pendentes no boot — caminho
+  // recomendado em produção, onde synchronize fica sempre desligado
+  migrationsRun: process.env.DB_MIGRATIONS_RUN === 'true',
   logging: !isProduction && process.env.DB_LOGGING === 'true',
   ssl: databaseSsl,
   autoLoadEntities: true,
