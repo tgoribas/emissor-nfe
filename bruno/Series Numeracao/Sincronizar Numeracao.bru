@@ -1,0 +1,33 @@
+meta {
+  name: Sincronizar Numeracao
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/series-numeracao/{{emitenteId}}/sincronizar-numero
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "serie": 1,
+    "ultimoNumero": 2337
+  }
+}
+
+docs {
+  Ajusta o último número emitido da série — a próxima NF-e recebe ultimoNumero + 1.
+  Caso Polutec: continuidade da sequência do Bling (último 2337, próxima 2338).
+}
+
+tests {
+  test("deve retornar sucesso (200/201)", function () {
+    expect([200, 201]).to.include(res.getStatus());
+  });
+}

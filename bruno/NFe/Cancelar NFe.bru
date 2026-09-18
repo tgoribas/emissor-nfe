@@ -1,0 +1,32 @@
+meta {
+  name: Cancelar NFe
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/nfe/{{notaFiscalId}}/cancelar
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "justificativa": "Cancelamento de teste via colecao Bruno em homologacao"
+  }
+}
+
+docs {
+  Transmite o evento de cancelamento à SEFAZ. Justificativa: mínimo 15 caracteres.
+  Prazo legal: até 24h após a autorização.
+}
+
+tests {
+  test("deve retornar sucesso (200/201)", function () {
+    expect([200, 201]).to.include(res.getStatus());
+  });
+}

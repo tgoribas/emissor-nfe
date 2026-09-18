@@ -1,0 +1,26 @@
+meta {
+  name: Baixar DANFE (PDF)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/nfe/{{notaFiscalId}}/danfe
+  body: none
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+docs {
+  DANFE oficial da NF-e autorizada. A resposta é o binário do PDF.
+}
+
+tests {
+  test("deve retornar um PDF (200)", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getHeader("content-type")).to.include("application/pdf");
+  });
+}

@@ -1,0 +1,32 @@
+meta {
+  name: Carta de Correcao NFe
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/nfe/{{notaFiscalId}}/carta-correcao
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "correcao": "Correcao de teste via colecao Bruno em homologacao"
+  }
+}
+
+docs {
+  Transmite a CC-e à SEFAZ. Correção: mínimo 15 caracteres. Não corrige
+  valores, impostos ou dados cadastrais que exijam cancelamento.
+}
+
+tests {
+  test("deve retornar sucesso (200/201)", function () {
+    expect([200, 201]).to.include(res.getStatus());
+  });
+}

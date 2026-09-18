@@ -1,0 +1,36 @@
+meta {
+  name: Emitente Atual
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/emitentes/atual
+  body: none
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+docs {
+  Retorna o primeiro emitente do tenant (usado pela Polutec para resolver o
+  emitenteId automaticamente). Retorna 404 enquanto nenhum emitente foi criado.
+}
+
+script:post-response {
+  if (res.getStatus() === 200 && res.getBody().id) {
+    bru.setEnvVar("emitenteId", res.getBody().id);
+  }
+}
+
+tests {
+  test("deve retornar status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("deve retornar um emitente com id", function () {
+    expect(res.getBody().id).to.match(/^[0-9a-f-]{36}$/);
+  });
+}

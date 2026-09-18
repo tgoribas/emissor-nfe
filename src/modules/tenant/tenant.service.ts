@@ -53,6 +53,19 @@ export class TenantService {
     return tenant;
   }
 
+  async rotateApiKey(id: string): Promise<TenantEntity> {
+    const tenant = await this.findById(id);
+
+    const apiKey = `nfe_${randomBytes(24).toString('hex')}`;
+
+    // update() direto: a coluna api_key tem select:false, então um save() da
+    // entidade carregada não incluiria a coluna
+    await this.tenantRepository.update(id, { apiKey: this.hashApiKey(apiKey) });
+
+    // A chave em claro é retornada UMA única vez; no banco fica apenas o hash
+    return { ...tenant, apiKey };
+  }
+
   async findByApiKey(apiKey: string): Promise<TenantEntity> {
     const tenant = await this.tenantRepository.findOne({
       where: { apiKey: this.hashApiKey(apiKey) },

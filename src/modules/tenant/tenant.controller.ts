@@ -22,4 +22,9 @@ export class TenantController {
   async findById(@Param('id') id: string) {
     return this.tenantService.findById(id);
   }
+
+  @Post(':id/rotate-key')
+  async rotateKey(@Param('id') id: string) {
+    return this.tenantService.rotateApiKey(id);
+  }
 }

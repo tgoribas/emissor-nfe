@@ -1,0 +1,77 @@
+meta {
+  name: Preview DANFE
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/nfe/preview-danfe
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "emitenteId": "{{emitenteId}}",
+    "referenciaExterna": "PEDIDO-BRUNO-001",
+    "serie": 1,
+    "tipoEmissao": "1",
+    "naturezaOperacao": "VENDA DE MERCADORIA",
+    "destinatario": {
+      "cpfCnpj": "12345678909",
+      "nome": "Cliente Teste Bruno",
+      "logradouro": "Avenida Paulista",
+      "numero": "1000",
+      "bairro": "Bela Vista",
+      "codigoMunicipioIbge": "3550308",
+      "uf": "SP",
+      "cep": "01310100"
+    },
+    "itens": [
+      {
+        "numeroItem": 1,
+        "codigo": "PROD-001",
+        "descricao": "Produto de Teste",
+        "ncm": "84713012",
+        "cfop": "5102",
+        "unidadeComercial": "UN",
+        "quantidadeComercial": 2,
+        "valorUnitario": 50,
+        "valorTotalBruto": 100,
+        "impostos": {
+          "icms": {
+            "origem": "0",
+            "cst": "102"
+          },
+          "pis": {
+            "cst": "07"
+          },
+          "cofins": {
+            "cst": "07"
+          }
+        }
+      }
+    ],
+    "pagamento": {
+      "formaPagamento": "01",
+      "valor": 100
+    },
+    "informacoesComplementares": "Preview de DANFE via colecao Bruno"
+  }
+}
+
+docs {
+  Gera o PDF do DANFE em modo rascunho SEM transmitir à SEFAZ (mesmo payload
+  do Emitir NFe). A resposta é o binário do PDF.
+}
+
+tests {
+  test("deve retornar um PDF (200)", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getHeader("content-type")).to.include("application/pdf");
+  });
+}

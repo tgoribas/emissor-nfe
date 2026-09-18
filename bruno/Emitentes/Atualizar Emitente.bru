@@ -1,0 +1,38 @@
+meta {
+  name: Atualizar Emitente
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/emitentes/{{emitenteId}}
+  body: json
+  auth: none
+}
+
+headers {
+  x-api-key: {{apiKey}}
+}
+
+body:json {
+  {
+    "nomeFantasia": "Polutec",
+    "ambienteSefaz": "2",
+    "logradouro": "Rua Atualizada",
+    "numero": "200"
+  }
+}
+
+docs {
+  Atualização parcial: envie apenas os campos que deseja alterar.
+}
+
+tests {
+  test("deve retornar status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("deve manter o mesmo id", function () {
+    expect(res.getBody().id).to.equal(bru.getEnvVar("emitenteId"));
+  });
+}

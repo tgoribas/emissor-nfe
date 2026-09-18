@@ -39,12 +39,12 @@ O tenant é derivado da API key no servidor — não existe mais header `x-tenan
 ## Fluxo de testes (encadeado automaticamente)
 
 1. **Health Check** — status do serviço (público)
-2. **Tenants** — criar tenant (admin) → salva `{{tenantId}}` e `{{apiKey}}`
-3. **Emitentes** — criar emitente → salva `{{emitenteId}}` (+ testes de 401)
+2. **Tenants** — criar tenant (admin) → salva `{{tenantId}}` e `{{apiKey}}`; **Rotacionar API Key** invalida a chave anterior na hora e salva a nova em `{{apiKey}}`
+3. **Emitentes** — criar/atualizar emitente e **Emitente Atual** → salvam `{{emitenteId}}` (+ testes de 401)
 4. **Certificados** — upload do PFX (ver abaixo)
-5. **Series Numeracao** — criar série 1 (modelo 55)
-6. **NFe** — emitir NF-e → salva `{{notaFiscalId}}` e `{{chaveAcesso}}`
-7. **Eventos Fiscais** — carta de correção / cancelamento
+5. **Series Numeracao** — criar série 1 (modelo 55) e sincronizar numeração (continuidade do Bling: último 2337)
+6. **NFe** — emitir NF-e → salva `{{notaFiscalId}}` e `{{chaveAcesso}}`; preview/DANFE/XML, cancelamento e carta de correção (SEFAZ)
+7. **Eventos Fiscais** — registro manual de eventos na trilha fiscal
 8. **SEFAZ** — status do webservice da UF do emitente
 9. **Webhooks** — logs de notificação do tenant
 

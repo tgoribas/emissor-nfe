@@ -1,0 +1,42 @@
+meta {
+  name: Rotacionar API Key
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/tenants/{{tenantId}}/rotate-key
+  body: none
+  auth: none
+}
+
+headers {
+  x-admin-key: {{adminKey}}
+}
+
+docs {
+  Gera uma nova api key (nfe_...) para o tenant e invalida a anterior
+  IMEDIATAMENTE (o banco guarda apenas o hash sha256). A chave em claro é
+  retornada uma única vez nesta resposta — atualize o NFE_API_KEY no .env
+  da Polutec na mesma janela.
+}
+
+script:post-response {
+  if (res.getStatus() === 201 && res.getBody().apiKey) {
+    bru.setEnvVar("apiKey", res.getBody().apiKey);
+  }
+}
+
+tests {
+  test("deve rotacionar a chave (201)", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("deve retornar o tenant correto", function () {
+    expect(res.getBody().id).to.equal(bru.getEnvVar("tenantId"));
+  });
+
+  test("deve retornar a nova apiKey em claro (unica exibicao)", function () {
+    expect(res.getBody().apiKey).to.match(/^nfe_[0-9a-f]{48}$/);
+  });
+}
