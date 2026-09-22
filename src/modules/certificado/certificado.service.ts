@@ -161,35 +161,62 @@ export class CertificadoService {
     const pfxBuffer = this.decryptPfx(cert.arquivoPfxBase64);
     const forge = require('node-forge');
 
+    let pfx: any;
     try {
       const pfxAsn1 = forge.asn1.fromDer(pfxBuffer.toString('binary'));
-      const pfx = forge.pkcs12.pkcs12FromAsn1(pfxAsn1, senha);
-
-      let keyPem = '';
-      let certPem = '';
-
-      for (const safeContent of pfx.safeContents) {
-        for (const safeBag of safeContent.safeBags) {
-          if (safeBag.key && !keyPem) {
-            keyPem = forge.pki.privateKeyToPem(safeBag.key);
-          }
-          if (safeBag.cert && !certPem) {
-            certPem = forge.pki.certificateToPem(safeBag.cert);
-          }
-        }
-      }
-
-      return {
-        certPem,
-        keyPem,
-        pfxBuffer,
-        senha,
-      };
+      pfx = forge.pkcs12.pkcs12FromAsn1(pfxAsn1, senha);
     } catch (err) {
       throw new BadRequestException(
         'Falha ao decodificar certificado A1: Senha inválida ou arquivo corrompido.',
       );
     }
+
+    let privateKey: any = null;
+    const certificados: any[] = [];
+
+    for (const safeContent of pfx.safeContents) {
+      for (const safeBag of safeContent.safeBags) {
+        if (safeBag.key && !privateKey) {
+          privateKey = safeBag.key;
+        }
+        if (safeBag.cert) {
+          certificados.push(safeBag.cert);
+        }
+      }
+    }
+
+    if (!privateKey || certificados.length === 0) {
+      throw new BadRequestException(
+        'Certificado A1 inválido: o arquivo PFX não contém chave privada e certificado.',
+      );
+    }
+
+    // O PFX traz o certificado do emitente junto com os intermediários da ICP-Brasil,
+    // em ordem não garantida: o folha é o que corresponde à chave privada.
+    const folha =
+      certificados.find(
+        (c) => c.publicKey?.n && privateKey.n && c.publicKey.n.compareTo(privateKey.n) === 0,
+      ) || certificados[0];
+
+    if (folha.validity?.notAfter && folha.validity.notAfter < new Date()) {
+      const vencimento = new Date(folha.validity.notAfter).toLocaleDateString('pt-BR');
+      throw new BadRequestException(
+        `Certificado A1 vencido em ${vencimento}. Envie um novo certificado para continuar emitindo.`,
+      );
+    }
+
+    const keyPem = forge.pki.privateKeyToPem(privateKey);
+    // Folha primeiro e intermediários em seguida: a SEFAZ exige a cadeia completa no mTLS
+    const certPem = [folha, ...certificados.filter((c) => c !== folha)]
+      .map((c) => forge.pki.certificateToPem(c))
+      .join('');
+
+    return {
+      certPem,
+      keyPem,
+      pfxBuffer,
+      senha,
+    };
   }
 
   async findByEmitente(emitenteId: string) {
